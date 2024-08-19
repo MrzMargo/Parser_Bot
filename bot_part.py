@@ -66,14 +66,19 @@ def handle_message(message):
         c = conn.cursor()
 
         user_id = message.chat.id
-        def reminders(user_id):
-            date_time_str = "2024-08-16 23:35"
+        def reminders(user_id, date_time_str):
             date_time = datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M')
 
             while True:
                 now = datetime.datetime.now()
                 if now >= date_time:
-                    bot.send_message(chat_id=user_id, text="Напоминание: Пора сделать что-то важное!")
+                    c.execute("SELECT id FROM Notification WHERE time = ?", (date_time_str,))
+                    results = c.fetchall()
+                    print(results)
+                    c.execute("SELECT name_of_task FROM Task WHERE notification_id = ?", results[0])
+                    task = c.fetchall()
+                    text = task[0]
+                    bot.send_message(chat_id=user_id, text=f"{text[0]}")
                     break
                 time.sleep(1)
         global name_of_task
@@ -111,9 +116,7 @@ def handle_message(message):
             c.execute("SELECT id FROM Notification WHERE time = ?", (notification_time,))
             notification_id = c.fetchone()[0]
             c.execute("UPDATE Task SET notification_id = ? WHERE name_of_task = ?",(notification_id, name_of_task))
-            print(notification_id)
-            print(notification_time)
-            reminders(user_id)
+            reminders(user_id, notification_time)
 
         conn.commit()
         conn.close()
@@ -135,7 +138,8 @@ def handle_button_click(call):
         conn.close()
         bot.send_message(chat_id=call.message.chat.id, text=f"{list}")
     elif call.data == "button3":
-        bot.send_message(chat_id=call.message.chat.id, text="Вы нажали Кнопку 3")
+        list = "Я помогу вам вести учет дел! \nЧтобы создать задачу, нажмите /newtask \nЕсли хотите просмотреть список задач - нажмите кнопку Посмотреть задачи"
+        bot.send_message(chat_id=call.message.chat.id, text=f"{list}")
 
 
 bot.polling(none_stop=True)
