@@ -124,7 +124,16 @@ def handle_button_click(call):
     if call.data == "button1":
         bot.send_message(chat_id=call.message.chat.id, text="Вы нажали Кнопку 1")
     elif call.data == "button2":
-        bot.send_message(chat_id=call.message.chat.id, text="Вы нажали Кнопку 2")
+        conn = sqlite3.connect('tasks.db')
+        c = conn.cursor()
+        c.execute("SELECT * FROM Task")
+        results = c.fetchall()
+        list = ""
+        for row in results:
+            list= list+ str(row[0])+" "+str(row[1])+"\n"
+        conn.commit()
+        conn.close()
+        bot.send_message(chat_id=call.message.chat.id, text=f"{list}")
     elif call.data == "button3":
         bot.send_message(chat_id=call.message.chat.id, text="Вы нажали Кнопку 3")
 
